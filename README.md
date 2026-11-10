@@ -126,7 +126,7 @@ model if you want LLM explanations. The app also works fully **without** any LLM
 deterministic still runs.
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/SharmaSanjeet/AI-Forensics.git
 cd AI-Forensics
 
 # with uv
