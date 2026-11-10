@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Cases · Assistant Session Ledger{% endblock %}
+{% block page_title %}Cases &amp; intake{% endblock %}
+{% block eyebrow %}Collect locally, keep evidence masked{% endblock %}
+
+{% block content %}
+<section class="split">
+  <div class="panel">
+    <div class="panel-head"><h2>New collection</h2></div>
+    <p class="muted">
+      Machine mode scans known AI-assistant store locations for every local profile.
+      Folder mode parses a single authorized directory. Both modes are read-only and
+      refuse symlinks outside the selected roots.
+    </p>
+    <form method="post" action="/cases/collect" class="stack" onsubmit="this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').textContent='Collecting…';">
+      <label>Mode
+        <select name="mode" id="collect-mode" onchange="document.getElementById('path-field').hidden = (this.value !== 'folder')">
+          <option value="machine">This machine</option>
+          <option value="folder">One folder</option>
+        </select>
+      </label>
+      <label id="path-field" hidden>Folder path
+        <input type="text" name="path" placeholder="C:\Users\name\project or /home/name">
+      </label>
+      <label class="check">
+        <input type="checkbox" name="include_subagents" value="1">
+        Include subagent transcripts
+      </label>
+      <div>
+        <button class="btn primary" type="submit">Start collection</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Existing cases</h2><span class="muted tiny">{{ active_cases|length }} on disk</span></div>
+    {% if active_cases %}
+    <div class="case-list">
+      {% for item in active_cases %}
+      <div class="case-row">
+        <div class="grow">
+          <strong class="mono">{{ item.id }}</strong>
+          <small class="muted">{{ item.modified|ts }} · {{ item.path }}</small>
+        </div>
+        {% if current and current.id == item.id %}
+        <span class="pill ok">loaded</span>
+        {% else %}
+        <form method="post" action="/cases/open">
+          <input type="hidden" name="case_id" value="{{ item.id }}">
+          <button class="btn small" type="submit">Open</button>
+        </form>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">No cases yet. Start a collection to create one.</p>
+    {% endif %}
+    <p class="note">
+      {% if current %}
+      Case <span class="mono">{{ current.id }}</span> is stored under <span class="mono">{{ current.path }}</span>.
+      {% else %}
+      New cases are created under <span class="mono">{{ cases_root }}</span>.
+      {% endif %}
+      The database holds masked text only; raw artifacts stay where they are.
+    </p>
+  </div>
+</section>
+
+{% include "partials/watch_panel.html" %}
+
+<section class="panel">
+  <div class="panel-head"><h2>What gets parsed</h2></div>
+  <div class="coverage-row">
+    <span class="pill ok">Claude Code</span>
+    <span class="pill ok">Claude Desktop</span>
+    <span class="pill ok">OpenAI Codex</span>
+    <span class="pill ok">Cursor</span>
+    <span class="pill ok">Gemini CLI</span>
+    <span class="pill ok">GitHub Copilot</span>
+    <span class="pill ok">VS Code chatSessions</span>
+    <span class="pill">ChatGPT / Grok / Windsurf: inventory-only</span>
+  </div>
+  <p class="muted tiny">
+    Each checked path, skip, parse error, and truncation is recorded in the coverage ledger.
+    Credential files are inventoried by path, size, and mtime only.
+  </p>
+</section>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Overview · Assistant Session Ledger{% endblock %}
+{% block page_title %}Overview{% endblock %}
+{% block eyebrow %}{{ current.id if current else 'No case loaded' }}{% endblock %}
+
+{% block content %}
+{% if not current %}
+<section class="hero">
+  <div>
+    <h2>Turn local AI-assistant artifacts into a reviewable case.</h2>
+    <p>
+      Collect Claude Code, Codex, Cursor, Gemini CLI, Copilot, and VS Code chat stores into one
+      masked timeline. Deterministic rules surface leads; an LLM explains them in plain language.
+    </p>
+    <a class="btn primary" href="/cases">Collect this machine</a>
+  </div>
+  <div class="hero-points">
+    <div><b>Masked at rest</b><span>Secrets are redacted before storage, with salted fingerprints only.</span></div>
+    <div><b>Evidence-linked</b><span>Every lead points at specific timeline rows and source files.</span></div>
+    <div><b>Explainable</b><span>LLM explanations through any local or hosted provider, with deterministic fallback when no model is available.</span></div>
+  </div>
+</section>
+{% else %}
+
+<section class="stat-grid">
+  <div class="stat"><span>Rows</span><b>{{ stats.total_rows }}</b><small>{{ stats.sessions }} sessions</small></div>
+  <div class="stat"><span>Open leads</span><b>{{ stats.open_anomalies }}</b><small>{{ stats.anomalies }} total · rules, not verdicts</small></div>
+  <div class="stat"><span>Secret rows</span><b>{{ stats.secret_rows }}</b><small>values masked</small></div>
+  <div class="stat"><span>Tools</span><b>{{ tools|length }}</b><small>{{ coverage.get('parsed', 0) }} parsed stores</small></div>
+  <div class="stat"><span>First event</span><b class="small-b">{{ stats.first_timestamp|ts }}</b><small>UTC</small></div>
+  <div class="stat"><span>Last event</span><b class="small-b">{{ stats.last_timestamp|ts }}</b><small>UTC</small></div>
+</section>
+
+<section class="split">
+  <div class="panel">
+    <div class="panel-head"><h2>Rows by tool</h2><span class="muted tiny">normalized records</span></div>
+    {% if tools %}
+      {% for item in tools %}
+      <div class="bar-row">
+        <span class="bar-label">{{ item.label }}</span>
+        <div class="bar"><i style="width: {{ pct(item.count, max_tool) }}%"></i></div>
+        <b>{{ item.count }}</b>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="muted">No rows collected.</p>
+    {% endif %}
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>Leads by severity</h2><a class="tiny" href="/anomalies">open all</a></div>
+    <div class="sev-grid">
+      {% for sev in severity_counts %}
+      <a class="sev-tile sev-{{ sev.label }}" href="/anomalies?severity={{ sev.label }}">
+        <b>{{ sev.count }}</b><span>{{ sev.label }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="coverage-row">
+      {% for status, count in coverage.items() %}
+      <span class="pill status-{{ status }}">{{ status }} {{ count }}</span>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="brief-panel">
+  {% if brief %}
+    {% include "partials/brief.html" %}
+  {% else %}
+    <div class="panel-head">
+      <h2>Case brief</h2>
+      <button class="btn" hx-post="/brief" hx-target="#brief-panel" hx-swap="innerHTML" hx-indicator="#brief-spin">
+        Generate brief
+      </button>
+    </div>
+    <p class="muted">
+      Summarize the case in plain language. Uses {{ llm_config.label }} · {{ llm_config.model or 'no model' }};
+      falls back to a deterministic summary if the model is unavailable.
+      <span id="brief-spin" class="htmx-indicator">Working…</span>
+    </p>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Activity by hour (UTC)</h2><span class="muted tiny">all masked rows</span></div>
+  <svg class="chart" viewBox="0 0 720 170" role="img" aria-label="Row count by hour of day">
+    <line x1="0" y1="150" x2="720" y2="150" class="axis"></line>
+    {% for point in hourly %}
+    {% set h = (point.count / max_hour * 130) if max_hour else 0 %}
+    <rect x="{{ loop.index0 * 30 + 4 }}" y="{{ 150 - h }}" width="22" height="{{ h }}" rx="2">
+      <title>{{ point.hour }}:00 UTC — {{ point.count }} rows</title>
+    </rect>
+    {% if loop.index0 % 6 == 0 %}
+    <text x="{{ loop.index0 * 30 + 4 }}" y="166" class="axis-label">{{ point.hour }}</text>
+    {% endif %}
+    {% endfor %}
+  </svg>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Recent leads</h2><a class="tiny" href="/anomalies">view all</a></div>
+  {% if recent %}
+  <div class="recent-list">
+    {% for a in recent %}
+    <a class="recent-item" href="/anomalies?severity={{ a.severity }}#a-{{ a.id }}">
+      <span class="badge sev-{{ a.severity }}">{{ a.severity }}</span>
+      <span class="grow">
+        <strong>{{ a.title }}</strong>
+        <small>{{ a.whatHappened or a.summary }}</small>
+      </span>
+      <span class="muted tiny mono">{{ a.timestamp|ts }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="muted">No leads yet. <button class="link" hx-post="/detect" hx-target="body" hx-swap="none">Run detectors</button></p>
+  {% endif %}
+</section>
+
+{% endif %}
+{% endblock %}

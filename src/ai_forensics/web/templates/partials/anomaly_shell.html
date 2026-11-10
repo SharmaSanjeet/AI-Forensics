@@ -1,0 +1,120 @@
+<div id="anomaly-shell">
+  <div class="tabs">
+    <a class="{{ 'active' if not severity else '' }}" href="/anomalies?review={{ 'all' if review_all else '' }}&amp;group={{ 'session' if grouped else '' }}">All</a>
+    {% for sev in severity_counts %}
+    <a class="{{ 'active' if severity == sev.label else '' }} sev-{{ sev.label }}"
+       href="/anomalies?severity={{ sev.label }}&amp;review={{ 'all' if review_all else '' }}&amp;group={{ 'session' if grouped else '' }}">
+      {{ sev.label }} <b>{{ sev.count }}</b>
+    </a>
+    {% endfor %}
+    <span class="tabs-note muted tiny">
+      <a href="/anomalies?severity={{ severity }}&amp;review={{ '' if review_all else 'all' }}&amp;group={{ 'session' if grouped else '' }}">
+        {% if review_all %}hide reviewed{% else %}show reviewed{% if hidden_count %} ({{ hidden_count }}){% endif %}{% endif %}
+      </a>
+    </span>
+    <span class="tabs-note muted tiny">
+      <a href="/anomalies?severity={{ severity }}&amp;review={{ 'all' if review_all else '' }}&amp;group={{ '' if grouped else 'session' }}">
+        {% if grouped %}ungroup{% else %}group by session{% endif %}
+      </a>
+    </span>
+    <span class="tabs-note muted tiny">
+      {% if llm_config.enabled %}{{ llm_config.label }} · {{ llm_config.model }}{% else %}LLM off · deterministic text{% endif %}
+    </span>
+  </div>
+
+  <div class="toolbar panel">
+    <form hx-post="/anomalies/explain" hx-target="#anomaly-shell" hx-swap="outerHTML">
+      <input type="hidden" name="severity" value="{{ severity }}">
+      <input type="hidden" name="review" value="{{ 'all' if review_all else '' }}">
+      <input type="hidden" name="group" value="{{ 'session' if grouped else '' }}">
+      <button class="btn primary" type="submit" hx-indicator="#explain-spin">Explain with LLM</button>
+      <span id="explain-spin" class="htmx-indicator tiny">Calling model and validating output…</span>
+    </form>
+    <form hx-post="/anomalies/rank" hx-target="#anomaly-shell" hx-swap="outerHTML">
+      <input type="hidden" name="severity" value="{{ severity }}">
+      <input type="hidden" name="review" value="{{ 'all' if review_all else '' }}">
+      <input type="hidden" name="group" value="{{ 'session' if grouped else '' }}">
+      <button class="btn" type="submit" hx-indicator="#rank-spin">Rank open leads</button>
+      <span id="rank-spin" class="htmx-indicator tiny">Asking the model for advisory labels…</span>
+    </form>
+    <form hx-post="/detect" hx-target="#anomaly-shell" hx-swap="outerHTML">
+      <input type="hidden" name="severity" value="{{ severity }}">
+      <input type="hidden" name="review" value="{{ 'all' if review_all else '' }}">
+      <input type="hidden" name="group" value="{{ 'session' if grouped else '' }}">
+      <button class="btn" type="submit">Re-run detectors</button>
+    </form>
+    <span class="muted tiny grow">
+      The model explains stored leads and can label them likely-real / likely-benign as advisory
+      triage input. It never selects, removes, or re-scores them; severity stays with the rules.
+    </span>
+  </div>
+
+  {% if hidden_count and not review_all %}
+  <p class="muted tiny">
+    {{ hidden_count }} reviewed or suppressed lead(s) hidden.
+    <a href="/anomalies?severity={{ severity }}&amp;review=all&amp;group={{ 'session' if grouped else '' }}">Show them</a>.
+  </p>
+  {% endif %}
+
+  {% if suppressions %}
+  <details class="panel suppression-panel">
+    <summary class="tiny muted">{{ suppressions|length }} active suppression rule(s)</summary>
+    <div class="suppression-list">
+      {% for s in suppressions %}
+      <div class="suppression-row">
+        <span class="pill">{{ s.rule }}</span>
+        <span class="mono break grow">{{ s.workspace or '(no workspace)' }}</span>
+        <span class="tiny muted">{{ 'all commands' if s.commandHash == '*' else 'exact command' }}</span>
+        <span class="tiny muted">expires {{ (s.expiresAt|ts) if s.expiresAt else 'never' }}</span>
+        <form hx-post="/suppressions/{{ s.id }}/remove" hx-target="#anomaly-shell" hx-swap="outerHTML">
+          <input type="hidden" name="severity" value="{{ severity }}">
+          <input type="hidden" name="review" value="{{ 'all' if review_all else '' }}">
+          <input type="hidden" name="group" value="{{ 'session' if grouped else '' }}">
+          <button class="btn small" type="submit">Remove</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+
+  {% if rank %}
+  <div class="notice {{ 'warn' if rank.unavailable else 'ok' }}">
+    <strong>Advisory ranking:</strong>
+    {% if rank.unavailable %}
+    {{ rank.unavailable }}
+    {% else %}
+    {{ rank.ranked }} open lead(s) labeled likely-real / likely-benign by {{ rank.model }}.
+    Labels are triage hints only — the model cannot create, remove, or re-score leads, and the
+    deterministic severity order stays authoritative.
+    {% if rank.skipped %}<span class="muted">{{ rank.skipped }} lead(s) beyond the ranking cap were skipped.</span>{% endif %}
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if report %}
+  <div class="notice {{ 'warn' if report.errors else 'ok' }}">
+    <strong>Explanation run:</strong>
+    {{ report.generated }} model · {{ report.cached }} cached · {{ report.fallback }} deterministic.
+    {% if report.provider == 'none' %}
+    <span class="muted">No model configured; all text is rule-based.</span>
+    {% endif %}
+    {% if report.errors %}
+    <details>
+      <summary>{{ report.errors|length }} provider issue(s)</summary>
+      <ul class="tight">
+        {% for error in report.errors[:5] %}<li class="mono tiny">{{ error }}</li>{% endfor %}
+      </ul>
+    </details>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div id="anomaly-list">
+    {% if grouped %}
+      {% include "partials/anomaly_groups.html" %}
+    {% else %}
+      {% include "partials/anomaly_list.html" %}
+    {% endif %}
+  </div>
+</div>

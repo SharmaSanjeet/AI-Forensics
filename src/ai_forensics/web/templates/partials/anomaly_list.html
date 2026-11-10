@@ -1,0 +1,12 @@
+{% if items %}
+<div class="anomaly-grid">
+  {% for a in items %}
+    {% include "partials/anomaly_card.html" %}
+  {% endfor %}
+</div>
+{% else %}
+<div class="panel empty-state">
+  <h3>No leads for this filter</h3>
+  <p class="muted">Run the detectors again, lower the severity filter, or show reviewed leads.</p>
+</div>
+{% endif %}

@@ -1,0 +1,52 @@
+<div class="drawer-head">
+  <div>
+    <span class="eyebrow">Row {{ row.id }}</span>
+    <h3>{{ row.tool }} · {{ row.role }}</h3>
+  </div>
+  <button class="btn small" onclick="document.getElementById('drawer').innerHTML=''">Close</button>
+</div>
+
+<dl class="detail">
+  <dt>Timestamp</dt><dd class="mono">{{ row.timestamp|ts }}</dd>
+  <dt>Record type</dt><dd class="mono">{{ row.recordType }}</dd>
+  <dt>Invoked tool</dt><dd class="mono">{{ row.invokedTool or '—' }}</dd>
+  <dt>Model</dt><dd class="mono">{{ row.model or '—' }}</dd>
+  <dt>Workspace</dt><dd class="mono break">{{ row.workspace or '—' }}</dd>
+  <dt>Session</dt><dd class="mono break">{{ row.sessionId or '—' }}</dd>
+  <dt>User / host</dt><dd>{{ row.user or '—' }} @ {{ row.host or '—' }}</dd>
+  <dt>Source</dt><dd class="mono break">{{ row.sourceFile }}<br><span class="muted">offset {{ row.sourceOffset }}</span></dd>
+  <dt>Also in tools</dt><dd>{{ row.alsoInTools|join(', ') if row.alsoInTools else '—' }}</dd>
+  {% if row.contentHash %}<dt>Content hash</dt><dd class="mono break">{{ row.contentHash }}</dd>{% endif %}
+</dl>
+
+{% if row.toolCommand %}
+<div class="subhead">Command</div>
+<pre class="code">{{ row.toolCommand }}</pre>
+{% endif %}
+
+{% if row.toolInput %}
+<div class="subhead">Tool input</div>
+<pre class="code">{{ row.toolInput }}</pre>
+{% endif %}
+
+{% if row.toolDescription %}
+<div class="subhead">Tool description</div>
+<p>{{ row.toolDescription }}</p>
+{% endif %}
+
+<div class="subhead">Masked text {% if row.truncated %}<span class="pill warn">truncated</span>{% endif %}</div>
+<pre class="code">{{ row.fullText or row.summary }}</pre>
+
+{% if row.secrets %}
+<div class="subhead">Secret leads</div>
+<ul class="secret-list">
+  {% for item in row.secrets %}
+  <li>
+    <span class="badge sev-{{ 'critical' if item.confidence == 'high' else 'medium' }}">{{ item.category }}</span>
+    <span class="mono">fingerprint {{ item.fingerprint }}</span>
+    <span class="muted tiny">confidence {{ item.confidence }}</span>
+  </li>
+  {% endfor %}
+</ul>
+<p class="note">Values are masked in storage. Fingerprints are salted SHA-256 prefixes.</p>
+{% endif %}

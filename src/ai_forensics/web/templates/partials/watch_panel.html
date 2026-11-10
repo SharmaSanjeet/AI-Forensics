@@ -1,0 +1,77 @@
+<section class="panel watch-panel" id="watch-panel"
+  {% if watch and watch.running %}hx-get="/watch/status" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
+  <div class="panel-head">
+    <h2>Watch mode</h2>
+    {% if watch and watch.loaded %}
+    <span class="pill {{ 'ok' if watch.running else '' }}">{{ watch.state }}</span>
+    {% endif %}
+  </div>
+
+  {% if not watch or not watch.loaded %}
+  <p class="muted">Load or collect a case to watch its stores for new artifacts.</p>
+  {% else %}
+  <p class="muted">
+    Every {{ watch.interval or 30 }} seconds the collector re-checks the case's stores for changed
+    files, appends only unseen rows, runs detectors, and explains new leads. Review state,
+    suppressions, and existing explanations are preserved.
+  </p>
+
+  <div class="watch-grid">
+    <div class="watch-stat"><span>Scans</span><b>{{ watch.scans }}</b></div>
+    <div class="watch-stat"><span>Files tracked</span><b>{{ watch.filesCount }}</b></div>
+    <div class="watch-stat"><span>New rows this watch</span><b>{{ watch.totalRows }}</b></div>
+    <div class="watch-stat"><span>New leads this watch</span><b>{{ watch.totalLeads }}</b></div>
+    <div class="watch-stat"><span>New rows last scan</span><b>{{ watch.newRows }}</b></div>
+    <div class="watch-stat"><span>Last scan</span><b class="small-b">{{ watch.lastScan|ts }}</b></div>
+    <div class="watch-stat"><span>Scan duration</span><b>{{ watch.lastDurationMs }} ms</b></div>
+  </div>
+
+  {% if watch.parseErrors or watch.truncations %}
+  <p class="muted tiny">
+    Last scan: {{ watch.parseErrors }} parse errors, {{ watch.truncations }} truncations.
+  </p>
+  {% endif %}
+
+  {% if watch.lastError %}
+  <div class="notice warn">Last watch error: {{ watch.lastError }}</div>
+  {% endif %}
+
+  {% if watch.recent %}
+  <div class="watch-leads">
+    <span class="label">Newest leads found while watching</span>
+    <ul>
+      {% for lead in watch.recent %}
+      <li>
+        <span class="pill">{{ lead.severity }}</span>
+        {{ lead.title }}
+        <span class="muted tiny">{{ lead.tool }}{% if lead.timestamp %} · {{ lead.timestamp|ts }}{% endif %} · {{ lead.explainedBy }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <div class="watch-form">
+    {% if watch.running %}
+    <form hx-post="/watch/stop" hx-target="#watch-panel" hx-swap="outerHTML">
+      <button class="btn" type="submit">Stop watching</button>
+    </form>
+    <span class="muted tiny">Watching since {{ watch.startedAt|ts }}</span>
+    {% else %}
+    <form class="watch-start" hx-post="/watch/start" hx-target="#watch-panel" hx-swap="outerHTML">
+      <label>Interval (seconds)
+        <input type="number" name="interval" min="5" max="3600" step="5" value="{{ watch.interval or 30 }}">
+      </label>
+      <label class="check">
+        <input type="checkbox" name="explain" value="1" {% if watch.explain %}checked{% endif %}>
+        Explain new leads with the LLM
+      </label>
+      <button class="btn primary" type="submit">Start watching</button>
+    </form>
+    {% if watch.stoppedAt %}
+    <span class="muted tiny">Stopped {{ watch.stoppedAt|ts }}</span>
+    {% endif %}
+    {% endif %}
+  </div>
+  {% endif %}
+</section>

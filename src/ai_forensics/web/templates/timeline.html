@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Timeline · Assistant Session Ledger{% endblock %}
+{% block page_title %}Timeline{% endblock %}
+{% block eyebrow %}{{ total }} matching rows{% endblock %}
+
+{% block content %}
+<form class="filters panel" method="get" action="/timeline">
+  <div class="filter-grid">
+    <label class="grow-2">Search
+      <input type="search" name="q" value="{{ filters.get('q', '') }}" placeholder="Summary, command, or masked text">
+    </label>
+    <label>Tool
+      <select name="tool">
+        <option value="">Any</option>
+        {% for value in facets.tool %}<option value="{{ value }}" {{ 'selected' if filters.get('tool') == value else '' }}>{{ value }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Role
+      <select name="role">
+        <option value="">Any</option>
+        {% for value in facets.role %}<option value="{{ value }}" {{ 'selected' if filters.get('role') == value else '' }}>{{ value }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Record type
+      <select name="recordType">
+        <option value="">Any</option>
+        {% for value in facets.recordType %}<option value="{{ value }}" {{ 'selected' if filters.get('recordType') == value else '' }}>{{ value }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Invoked tool
+      <select name="invokedTool">
+        <option value="">Any</option>
+        {% for value in facets.invokedTool %}<option value="{{ value }}" {{ 'selected' if filters.get('invokedTool') == value else '' }}>{{ value }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Workspace
+      <select name="workspace">
+        <option value="">Any</option>
+        {% for value in facets.workspace %}<option value="{{ value }}" {{ 'selected' if filters.get('workspace') == value else '' }}>{{ value }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>From
+      <input type="date" name="start" value="{{ filters.get('start', '') }}">
+    </label>
+    <label>To
+      <input type="date" name="end" value="{{ filters.get('end', '')[:10] }}">
+    </label>
+  </div>
+  <div class="filter-actions">
+    <button class="btn primary" type="submit">Apply</button>
+    <a class="btn" href="/timeline">Reset</a>
+    <a class="btn" href="/export/rows.csv?{{ base_qs }}">Export filtered CSV</a>
+  </div>
+</form>
+
+<section class="panel tight-panel">
+  <div class="table-wrap">
+    <table class="grid">
+      <thead>
+        <tr>
+          <th>Time (UTC)</th><th>Role</th><th>Tool</th><th>Invoked</th>
+          <th>Command</th><th>Summary</th><th>Workspace</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr class="row-link" hx-get="/rows/{{ row.id }}" hx-target="#drawer" hx-swap="innerHTML" tabindex="0">
+          <td class="mono nowrap">{{ row.timestamp|ts }}</td>
+          <td><span class="role role-{{ row.role }}">{{ row.role }}</span></td>
+          <td class="nowrap">{{ row.tool }}</td>
+          <td class="mono nowrap">{{ row.invokedTool or '—' }}</td>
+          <td class="mono clip">{{ row.toolCommand or '—' }}</td>
+          <td class="clip">{{ row.summary }}</td>
+          <td class="mono clip">{{ row.workspace or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="muted center">No rows match these filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="pager">
+    <span class="muted tiny">Page {{ page }} of {{ pages }} · {{ total }} rows · click a row for details</span>
+    <span class="pager-links">
+      {% if page > 1 %}<a class="btn small" href="/timeline?{{ base_qs }}{% if base_qs %}&{% endif %}page={{ page - 1 }}">Previous</a>{% endif %}
+      {% if page < pages %}<a class="btn small" href="/timeline?{{ base_qs }}{% if base_qs %}&{% endif %}page={{ page + 1 }}">Next</a>{% endif %}
+    </span>
+  </div>
+</section>
+{% endblock %}

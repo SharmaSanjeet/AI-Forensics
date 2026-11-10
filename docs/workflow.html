@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Forensics - one case in eight steps</title>
+<style>html,body{margin:0;background:#0b1120}</style>
+</head>
+<body>
+<style>
+  .aifw {
+    --bg: #0b1120;
+    --panel: #121a2b;
+    --panel2: #0f1727;
+    --line: #24324b;
+    --text: #e6edf7;
+    --muted: #97a7c0;
+    --teal: #2dd4bf;
+    --amber: #f5b544;
+    --red: #f87171;
+    --blue: #7dd3fc;
+    background: radial-gradient(1200px 500px at 10% -10%, #14233c 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+    padding: 30px 30px 26px;
+    border-radius: 16px;
+    line-height: 1.45;
+  }
+  .aifw * { box-sizing: border-box; }
+  .aifw .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+  .aifw .eyebrow {
+    display: inline-flex; gap: 8px; align-items: center;
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--teal); font-weight: 700;
+  }
+  .aifw .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 10px var(--teal); }
+  .aifw h1 { margin: 8px 0 6px; font-size: 27px; line-height: 1.15; letter-spacing: -.01em; }
+  .aifw .sub { margin: 0; max-width: 720px; color: var(--muted); font-size: 14.5px; }
+  .aifw .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .aifw .badge {
+    border: 1px solid var(--line); background: rgba(45,212,191,.07); color: #c7f5ee;
+    font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 999px; white-space: nowrap;
+  }
+  .aifw .flow { margin-top: 22px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
+  .aifw .step {
+    position: relative; background: linear-gradient(180deg, var(--panel), var(--panel2));
+    border: 1px solid var(--line); border-radius: 12px; padding: 14px 14px 12px;
+    min-height: 154px; display: flex; flex-direction: column; gap: 7px;
+  }
+  .aifw .step::after {
+    content: ""; position: absolute; top: 24px; right: -13px; width: 13px; height: 2px;
+    background: linear-gradient(90deg, var(--line), transparent);
+  }
+  .aifw .step:nth-child(4n)::after, .aifw .step:last-child::after { display: none; }
+  .aifw .num {
+    width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+    font-size: 12.5px; font-weight: 800; color: #04111f;
+    background: var(--teal); box-shadow: 0 0 0 3px rgba(45,212,191,.13);
+  }
+  .aifw .step h3 { margin: 2px 0 0; font-size: 14.5px; letter-spacing: -.005em; }
+  .aifw .step p { margin: 0; color: var(--muted); font-size: 12.4px; flex: 1; }
+  .aifw .out {
+    align-self: flex-start; font-size: 10.5px; font-weight: 700; letter-spacing: .05em;
+    text-transform: uppercase; color: var(--amber);
+    border: 1px solid rgba(245,181,68,.32); background: rgba(245,181,68,.07);
+    padding: 3px 8px; border-radius: 6px;
+  }
+  .aifw .step.guard .num { background: var(--amber); box-shadow: 0 0 0 3px rgba(245,181,68,.14); }
+  .aifw .step.guard .out { color: var(--blue); border-color: rgba(125,211,252,.3); background: rgba(125,211,252,.07); }
+  .aifw .lanes { margin-top: 16px; display: grid; grid-template-columns: 1.15fr .85fr; gap: 13px; }
+  .aifw .lane { background: rgba(18,26,43,.72); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .aifw .lane h4 { margin: 0 0 8px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .aifw .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .aifw .chip {
+    font-size: 11.5px; color: #d7e3f5; background: #0c1526; border: 1px solid var(--line);
+    padding: 4px 8px; border-radius: 6px;
+  }
+  .aifw .case { margin-top: 13px; display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap; }
+  .aifw .metric {
+    flex: 1 1 0; min-width: 118px; background: #0c1526; border: 1px solid var(--line);
+    border-radius: 10px; padding: 9px 11px;
+  }
+  .aifw .metric .v { font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+  .aifw .metric .l { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-top: 1px; }
+  .aifw .arrow { align-self: center; color: #3b4d6b; font-size: 15px; }
+  .aifw .foot {
+    margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    color: var(--muted); font-size: 11.5px;
+  }
+  .aifw .foot b { color: #dbe6f6; font-weight: 600; }
+  .aifw .foot .warn { color: var(--amber); }
+  @media (max-width: 980px) {
+    .aifw .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .aifw .step:nth-child(4n)::after { display: block; }
+    .aifw .step:nth-child(2n)::after { display: none; }
+    .aifw .lanes { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .aifw { padding: 22px 18px; }
+    .aifw .flow { grid-template-columns: 1fr; }
+    .aifw .step::after { display: none !important; }
+    .aifw h1 { font-size: 22px; }
+  }
+  @media print {
+    .aifw { background: #fff; color: #111; padding: 10mm; }
+    .aifw .step, .aifw .lane, .aifw .metric { background: #fff; border-color: #c9d3e4; break-inside: avoid; }
+    .aifw .sub, .aifw .step p, .aifw .metric .l, .aifw .foot { color: #44506a; }
+  }
+</style>
+
+<div class="aifw">
+  <div class="top">
+    <div>
+      <div class="eyebrow"><span class="dot"></span> Local AI artifacts forensics</div>
+      <h1>From AI logs to explained leads &mdash; one case in eight steps</h1>
+      <p class="sub">The workbench reads what your AI assistants left on this computer, hides credentials, builds one timeline, and turns suspicious moments into plain-English leads you can verify.</p>
+    </div>
+    <div class="badges">
+      <span class="badge">Runs on your machine</span>
+      <span class="badge">Originals untouched</span>
+      <span class="badge">Secrets masked first</span>
+    </div>
+  </div>
+
+  <div class="flow">
+    <div class="step">
+      <div class="num">1</div>
+      <h3>Pick a source</h3>
+      <p>Scan this PC automatically or point at a folder of exported logs. The app only reads; nothing is moved or edited.</p>
+      <span class="out">Case folder</span>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <h3>Unify the logs</h3>
+      <p>Different tools, one table: time, tool, role, command, workspace, session. Like merging many notebooks into one ledger.</p>
+      <span class="out">Normalized rows</span>
+    </div>
+    <div class="step guard">
+      <div class="num">3</div>
+      <h3>Mask secrets</h3>
+      <p>Keys and passwords become <span style="color:#fca5a5">[REDACTED:type:fingerprint]</span> before saving. The real value never enters the case, the screen, or the model.</p>
+      <span class="out">Masked database</span>
+    </div>
+    <div class="step">
+      <div class="num">4</div>
+      <h3>Build the timeline</h3>
+      <p>Every record in time order. Filter by tool, session or text; open any row to see the masked detail and where it came from.</p>
+      <span class="out">Searchable story</span>
+    </div>
+    <div class="step">
+      <div class="num">5</div>
+      <h3>Apply fixed rules</h3>
+      <p>Deterministic checks for exposed secrets, dangerous commands, uploads, prompt injection, unsafe settings, bursts and after-hours work. Same input, same result.</p>
+      <span class="out">Evidence-linked leads</span>
+    </div>
+    <div class="step guard">
+      <div class="num">6</div>
+      <h3>Local AI explains</h3>
+      <p>The model sees only masked evidence and allowed row IDs, then writes what happened, why it matters, and next steps. It cannot add evidence or change severity.</p>
+      <span class="out">Plain-English cards</span>
+    </div>
+    <div class="step">
+      <div class="num">7</div>
+      <h3>Review and decide</h3>
+      <p>Overview, Timeline, Anomalies, Secret leads, Coverage, Cases. You confirm or dismiss each lead &mdash; the app never declares an incident for you.</p>
+      <span class="out">Analyst decisions</span>
+    </div>
+    <div class="step">
+      <div class="num">8</div>
+      <h3>Export and verify</h3>
+      <p>CSV, manifest or a full ZIP. Fingerprints of every source file are re-checked so you can show the originals stayed unchanged.</p>
+      <span class="out">Shareable case pack</span>
+    </div>
+  </div>
+
+  <div class="lanes">
+    <div class="lane">
+      <h4>What you open in the app</h4>
+      <div class="chips">
+        <span class="chip">Overview &mdash; counts + brief</span>
+        <span class="chip">Timeline &mdash; every record</span>
+        <span class="chip">Anomalies &mdash; explained leads</span>
+        <span class="chip">Secret leads &mdash; where masking fired</span>
+        <span class="chip">Coverage &mdash; blind spots</span>
+        <span class="chip">Cases &amp; intake</span>
+        <span class="chip">Export</span>
+      </div>
+    </div>
+    <div class="lane">
+      <h4>Safety rails</h4>
+      <div class="chips">
+        <span class="chip">Read-only originals</span>
+        <span class="chip">Mask before storage</span>
+        <span class="chip">Localhost-only UI</span>
+        <span class="chip">Row-ID validation</span>
+        <span class="chip">Deterministic fallback</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="case">
+    <div class="metric"><div class="v">1,108</div><div class="l">records read</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="metric"><div class="v">52</div><div class="l">sessions</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="metric"><div class="v">3</div><div class="l">rows with masked secrets</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="metric"><div class="v">11</div><div class="l">rule-based leads</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="metric"><div class="v">11 / 11</div><div class="l">explained by llama3.1:8b</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="metric"><div class="v">13 / 13</div><div class="l">source hashes verified</div></div>
+  </div>
+
+  <div class="foot">
+    <div><b>Leads are triage prompts, not verdicts.</b> Confirm each one against its evidence rows.</div>
+    <div><span class="warn">Coverage matters:</span> partial, malformed or unavailable sources were not fully analysed.</div>
+  </div>
+</div>
+
+</body>
+</html>

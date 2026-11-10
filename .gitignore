@@ -1,0 +1,25 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Test/tool caches
+.pytest_cache/
+
+# Case databases contain machine-specific evidence
+cases/
+
+# Local case data that must never leave this machine
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+.env
+
+# Scratch experiments
+_shape.py

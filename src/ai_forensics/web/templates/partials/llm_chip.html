@@ -1,0 +1,11 @@
+{% if status.available %}
+<span class="chip ok" title="{{ status.detail }}">
+  {{ status.config.label }} · {{ status.config.model }}
+</span>
+{% elif status.config.enabled %}
+<span class="chip warn" title="{{ status.detail }}">
+  {{ status.config.label }} unavailable · deterministic mode
+</span>
+{% else %}
+<span class="chip muted" title="{{ status.detail }}">LLM disabled · deterministic mode</span>
+{% endif %}

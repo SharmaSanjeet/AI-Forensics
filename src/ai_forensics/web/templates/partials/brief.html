@@ -1,0 +1,30 @@
+<div class="panel-head">
+  <h2>Case brief</h2>
+  <button class="btn" hx-post="/brief" hx-target="#brief-panel" hx-swap="innerHTML" hx-indicator="#brief-spin">
+    Regenerate
+  </button>
+</div>
+<div class="brief-head">
+  <span class="badge sev-{{ brief.risk_level }}">{{ brief.risk_level }}</span>
+  {% if brief.source == 'llm' %}
+  <span class="pill">model: {{ brief.model or llm_config.model }}</span>
+  {% else %}
+  <span class="pill">deterministic</span>
+  {% endif %}
+  <span id="brief-spin" class="htmx-indicator tiny">Working…</span>
+</div>
+<h3 class="brief-headline">{{ brief.headline }}</h3>
+<p>{{ brief.overview }}</p>
+{% if brief.key_findings %}
+<ul class="tight">
+  {% for finding in brief.key_findings %}<li>{{ finding }}</li>{% endfor %}
+</ul>
+{% endif %}
+{% if brief.next_steps %}
+<div class="subhead">Suggested next steps</div>
+<ol class="tight">
+  {% for step in brief.next_steps %}<li>{{ step }}</li>{% endfor %}
+</ol>
+{% endif %}
+{% if brief.caveats %}<p class="note">{{ brief.caveats }}</p>{% endif %}
+{% if brief.error %}<p class="note warn-text">Fallback used: {{ brief.error }}</p>{% endif %}

@@ -1,0 +1,21 @@
+<div class="notice {{ 'ok' if result.matched == result.total else 'warn' }}">
+  <strong>{{ result.matched }} / {{ result.total }} hashes match</strong>
+  <span class="muted">checked {{ result.checkedAt }} ({{ result.source }})</span>
+</div>
+{% if result.checks %}
+<div class="table-wrap">
+  <table class="grid">
+    <thead><tr><th>Status</th><th>Expected</th><th>Actual</th><th>Path</th></tr></thead>
+    <tbody>
+      {% for item in result.checks %}
+      <tr>
+        <td><span class="pill status-{{ 'parsed' if item.status == 'match' else 'malformed' }}">{{ item.status }}</span></td>
+        <td class="mono tiny">{{ item.expected[:16] }}…</td>
+        <td class="mono tiny">{{ (item.actual[:16] ~ '…') if item.actual else '—' }}</td>
+        <td class="mono clip">{{ item.path }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}

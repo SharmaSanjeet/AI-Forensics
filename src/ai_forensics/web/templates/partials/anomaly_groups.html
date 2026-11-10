@@ -1,0 +1,49 @@
+{% if groups %}
+<div class="session-groups">
+  {% for group in groups %}
+  <section class="session-group">
+    <header class="session-head">
+      <span class="badge sev-{{ group.severity }}">{{ group.severity }}</span>
+      <div class="grow">
+        <div class="session-title">
+          {% if group.sessionId %}
+          <span class="mono session-id">{{ group.sessionId }}</span>
+          {% else %}
+          <span class="muted">No session id</span>
+          {% endif %}
+          <span class="pill">{{ group.tool or 'unknown tool' }}</span>
+          <span class="tiny muted">{{ group.count }} lead{{ '' if group.count == 1 else 's' }}</span>
+        </div>
+        <div class="tiny muted break">
+          {{ group.first|ts }} → {{ group.last|ts }}
+          {% if group.workspace %} · <span class="mono">{{ group.workspace }}</span>{% endif %}
+        </div>
+      </div>
+      {% if group.sessionId %}
+      <form class="bulk-form" hx-post="/anomalies/bulk" hx-target="#anomaly-shell" hx-swap="outerHTML">
+        <input type="hidden" name="session" value="{{ group.sessionId }}">
+        <input type="hidden" name="severity" value="{{ severity }}">
+        <input type="hidden" name="review" value="{{ 'all' if review_all else '' }}">
+        <input type="hidden" name="group" value="session">
+        <button class="btn small" type="submit" name="disposition" value="confirmed">Confirm session</button>
+        <button class="btn small" type="submit" name="disposition" value="dismissed">Dismiss session</button>
+        <button class="btn small" type="submit" name="disposition" value="accepted">Accept risk</button>
+      </form>
+      {% else %}
+      <span class="tiny muted">Bulk actions need a session id; review these individually.</span>
+      {% endif %}
+    </header>
+    <div class="anomaly-grid">
+      {% for a in group.leads %}
+        {% include "partials/anomaly_card.html" %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% else %}
+<div class="panel empty-state">
+  <h3>No leads for this filter</h3>
+  <p class="muted">Run the detectors again, lower the severity filter, or show reviewed leads.</p>
+</div>
+{% endif %}

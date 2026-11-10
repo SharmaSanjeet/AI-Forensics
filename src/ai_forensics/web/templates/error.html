@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ status }} · Assistant Session Ledger{% endblock %}
+{% block page_title %}Request failed{% endblock %}
+{% block eyebrow %}HTTP {{ status }}{% endblock %}
+
+{% block content %}
+<div class="panel empty-state">
+  <h3>{{ status }}</h3>
+  <p class="muted">{{ error }}</p>
+  <div class="filter-actions">
+    <a class="btn" href="/">Overview</a>
+    <a class="btn" href="/cases">Cases</a>
+  </div>
+</div>
+{% endblock %}

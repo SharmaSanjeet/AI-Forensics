@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Anomalies · Assistant Session Ledger{% endblock %}
+{% block page_title %}Anomaly leads{% endblock %}
+{% block eyebrow %}Deterministic detection, {% if llm_config.enabled %}{{ llm_config.model }} explanation{% else %}template explanation{% endif %}{% endblock %}
+
+{% block content %}
+{% include "partials/anomaly_shell.html" %}
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Coverage · Assistant Session Ledger{% endblock %}
+{% block page_title %}Coverage and integrity{% endblock %}
+{% block eyebrow %}What was read, skipped, or failed{% endblock %}
+
+{% block content %}
+<section class="stat-grid">
+  {% for item in stats.by_coverage %}
+  <div class="stat"><span>{{ item.label }}</span><b>{{ item.count }}</b><small>coverage entries</small></div>
+  {% endfor %}
+  <div class="stat"><span>Parse errors</span><b>{{ parse_errors }}</b><small>see entries</small></div>
+  <div class="stat"><span>Truncations</span><b>{{ truncations }}</b><small>text capped at 8 KiB</small></div>
+</section>
+
+<section class="panel tight-panel">
+  <div class="panel-head"><h2>Coverage ledger</h2><span class="muted tiny">one row per file or store checked</span></div>
+  <div class="table-wrap">
+    <table class="grid">
+      <thead>
+        <tr><th>Status</th><th>Tool</th><th>Source</th><th>Files</th><th>Rows</th><th>Errors</th><th>Truncated</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+        <tr>
+          <td><span class="pill status-{{ entry.status }}">{{ entry.status }}</span></td>
+          <td class="nowrap">{{ entry.tool }}</td>
+          <td class="mono clip">{{ entry.source }}</td>
+          <td>{{ entry.filesRead }}</td>
+          <td>{{ entry.rows }}</td>
+          <td>{{ entry.parseErrors }}</td>
+          <td>{{ entry.truncations }}</td>
+          <td class="clip">{{ entry.notes or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="muted center">No coverage entries.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Artifact hashes</h2>
+    <form hx-post="/coverage/verify" hx-target="#hash-check" hx-swap="innerHTML">
+      <button class="btn" type="submit">Verify hashes now</button>
+    </form>
+  </div>
+  <p class="muted tiny">
+    {{ files|length }} files hashed at {{ hash_source }}.
+    {% if hash_omitted %}{{ hash_omitted }} additional parsed files were not hashed (cap).{% endif %}
+    Original files are referenced, not copied.
+  </p>
+  {% if files %}
+  <div class="table-wrap">
+    <table class="grid">
+      <thead><tr><th>SHA-256</th><th>Size</th><th>Modified</th><th>Path</th></tr></thead>
+      <tbody>
+        {% for file in files %}
+        <tr>
+          <td class="mono tiny" title="{{ file.sha256 }}">{{ file.sha256[:16] }}…</td>
+          <td class="nowrap">{{ file.size }}</td>
+          <td class="mono nowrap">{{ file.mtime|ts }}</td>
+          <td class="mono clip">{{ file.path }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No hashes stored for this case. Re-collect to capture collection-time hashes.</p>
+  {% endif %}
+  <div id="hash-check"></div>
+</section>
+{% endblock %}

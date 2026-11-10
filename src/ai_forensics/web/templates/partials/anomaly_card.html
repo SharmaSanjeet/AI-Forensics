@@ -1,0 +1,85 @@
+<article class="anomaly-card sev-border-{{ a.severity }}" id="a-{{ a.id }}">
+  <div class="anomaly-head">
+    <span class="badge sev-{{ a.severity }}">{{ a.severity }}</span>
+    <h3>{{ a.title }}</h3>
+  </div>
+  <div class="meta-row">
+    <span>{{ a.tool or 'unknown tool' }}</span>
+    <span class="mono">{{ a.timestamp|ts }}</span>
+    <span>detector confidence {{ a.confidence }}</span>
+    <span class="pill">{{ a.rule }}</span>
+    {% if a.llmModel %}
+      <span class="pill">{{ a.llmModel if a.llmModel != 'deterministic' else 'deterministic text' }}</span>
+    {% endif %}
+    {% if a.rankLabel %}
+      <span class="pill rank-{{ a.rankLabel }}" title="Advisory model label ({{ a.rankModel }}): {{ a.rankReason }}">advisory: {{ a.rankLabel }}</span>
+    {% endif %}
+    {% if a.disposition and a.disposition != 'open' %}
+      <span class="pill disp-{{ a.disposition }}">{{ a.disposition|replace('_', ' ') }}</span>
+    {% endif %}
+    {% if a.suppressed %}<span class="pill">suppressed</span>{% endif %}
+  </div>
+  {% if a.workspace %}<div class="path mono">{{ a.workspace }}</div>{% endif %}
+  {% if a.summary %}<p class="summary">{{ a.summary }}</p>{% endif %}
+  {% if a.rankLabel and a.rankReason %}
+  <p class="tiny muted">Model (advisory): {{ a.rankReason }}</p>
+  {% endif %}
+
+  {% if a.whatHappened %}
+  <div class="explain">
+    <h4>What happened</h4>
+    <p>{{ a.whatHappened }}</p>
+    {% if a.whyItMatters %}
+    <h4>Why it matters</h4>
+    <p>{{ a.whyItMatters }}</p>
+    {% endif %}
+    {% if a.nextSteps %}
+    <h4>Next steps</h4>
+    <ul>
+      {% for step in a.nextSteps.split('\n') %}{% if step.strip() %}<li>{{ step }}</li>{% endif %}{% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="note">No explanation stored yet. Use “Re-explain” to generate one.</p>
+  {% endif %}
+
+  <div class="triage-bar">
+    <form hx-post="/anomalies/{{ a.id }}/triage" hx-target="#anomaly-shell" hx-swap="outerHTML">
+      <input type="hidden" name="severity" value="{{ severity|default('') }}">
+      <input type="hidden" name="review" value="{{ 'all' if review_all|default(false) else '' }}">
+      <input type="hidden" name="group" value="{{ 'session' if grouped|default(false) else '' }}">
+      <input class="triage-note" type="text" name="note" maxlength="500" placeholder="Review note (optional)" value="{{ a.dispositionNote|default('') }}">
+      <label class="tiny check" title="Hide this rule + workspace + command for 90 days">
+        <input type="checkbox" name="suppress" value="1"> suppress 90d
+      </label>
+      <button class="btn small" type="submit" name="disposition" value="confirmed">Confirm</button>
+      <button class="btn small" type="submit" name="disposition" value="dismissed">Dismiss</button>
+      <button class="btn small" type="submit" name="disposition" value="accepted">Accept risk</button>
+      {% if a.disposition and a.disposition != 'open' %}
+      <button class="btn small" type="submit" name="disposition" value="open">Reopen</button>
+      {% endif %}
+    </form>
+    {% if a.disposition and a.disposition != 'open' %}
+    <div class="tiny muted review-meta">
+      Reviewed{% if a.dispositionBy %} by {{ a.dispositionBy }}{% endif %}{% if a.dispositionAt %} · {{ a.dispositionAt|ts }}{% endif %}{% if a.dispositionNote %} — {{ a.dispositionNote }}{% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card-foot">
+    <div class="row-refs">
+      <span class="label">Evidence</span>
+      {% for rid in a.rowIds %}
+      <button class="link mono" hx-get="/rows/{{ rid }}" hx-target="#drawer" hx-swap="innerHTML">{{ rid }}</button>
+      {% endfor %}
+    </div>
+    <div class="foot-actions">
+      <button class="btn small" hx-post="/anomalies/{{ a.id }}/explain" hx-target="closest article" hx-swap="outerHTML" hx-indicator="#spin-{{ a.id }}"
+              hx-vals='{"severity": "{{ severity|default('') }}", "review": "{{ 'all' if review_all|default(false) else '' }}", "group": "{{ 'session' if grouped|default(false) else '' }}"}'>
+        Re-explain
+      </button>
+      <span id="spin-{{ a.id }}" class="htmx-indicator tiny">Working…</span>
+    </div>
+  </div>
+</article>

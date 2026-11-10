@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Export · Assistant Session Ledger{% endblock %}
+{% block page_title %}Export{% endblock %}
+{% block eyebrow %}Masked, hash-linked case outputs{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+  <div class="stat"><span>Rows</span><b>{{ manifest.counts.rows }}</b><small>normalized</small></div>
+  <div class="stat"><span>Leads</span><b>{{ manifest.counts.anomalies }}</b><small>{{ manifest.counts.anomaliesExplainedByModel }} model-explained</small></div>
+  <div class="stat"><span>Hashed files</span><b>{{ manifest.files|length }}</b><small>{{ manifest.filesHashSource }}</small></div>
+  <div class="stat"><span>Coverage entries</span><b>{{ manifest.coverage|length }}</b><small>paths checked</small></div>
+</div>
+
+<section class="export-grid">
+  <div class="panel">
+    <h3>Timeline CSV</h3>
+    <p class="muted">Every masked row with role, tool, command, workspace, session, source path, and secret categories.</p>
+    <a class="btn primary" href="/export/rows.csv">Download rows.csv</a>
+  </div>
+  <div class="panel">
+    <h3>Anomaly CSV</h3>
+    <p class="muted">Deterministic leads plus their explanations, evidence row IDs, and explaining model.</p>
+    <a class="btn primary" href="/export/anomalies.csv">Download anomalies.csv</a>
+  </div>
+  <div class="panel">
+    <h3>Manifest JSON</h3>
+    <p class="muted">Case metadata, counts, coverage ledger, artifact SHA-256 hashes, and the anomaly index.</p>
+    <a class="btn" href="/export/manifest.json">Download manifest.json</a>
+  </div>
+  <div class="panel">
+    <h3>Full case ZIP</h3>
+    <p class="muted">Consistent SQLite snapshot, case report, both CSVs, manifest, case summary, and a README with integrity notes.</p>
+    <a class="btn" href="/export/case.zip">Download case.zip</a>
+  </div>
+  <div class="panel">
+    <h3>Case report</h3>
+    <p class="muted">Executive summary, metrics, review status, every lead with evidence IDs, coverage, and methodology. Self-contained and print-ready. Uses the stored case brief; regenerate it on Overview to refresh model-written text.</p>
+    <div class="report-actions">
+      <a class="btn primary" href="/export/report.html">Download report.html</a>
+      <a class="btn" href="/export/report.md">Markdown</a>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Integrity notes</h2></div>
+  <p>{{ manifest.masking }}</p>
+  <p class="muted tiny">
+    Anomaly leads are triage items, not confirmed incidents. Model explanations are labeled by model name;
+    deterministic text is labeled <span class="mono">deterministic</span>.
+    Hash source: <span class="mono">{{ manifest.filesHashSource }}</span>.
+    Generated {{ manifest.generatedAt }}.
+  </p>
+</section>
+{% endblock %}
