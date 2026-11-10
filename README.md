@@ -10,6 +10,13 @@ optional plain-English explanations from a local LLM.
 
 ![Overview](.shots/overview.png)
 
+**See it in action:**
+
+| | |
+|---|---|
+| ![Web UI walkthrough](docs/demo-ui.gif) | ![Working console](docs/demo-console.gif) |
+| *The web UI walkthrough — all seven pages, real app, synthetic demo data.* | *The working console — real CLI: list, detect, analyze, serve.* |
+
 ---
 
 ## Table of contents
@@ -353,6 +360,9 @@ src/ai_forensics/
 ├── discover.py, paths.py, textutil.py
 tests/                   # 70 tests: parsers, masking, detection, ranking, watch, web, exports
 docs/workflow.html       # printable one-case-eight-steps diagram
+docs/demo-ui.gif         # animated web-UI walkthrough (synthetic demo case)
+docs/demo-console.gif    # animated CLI session
+tools/                   # demo asset generators (seeder, GIF renderers)
 ```
 
 ---
