@@ -36,7 +36,8 @@ optional plain-English explanations from a local LLM.
 13. [Project structure](#project-structure)
 14. [Testing](#testing)
 15. [FAQ / troubleshooting](#faq--troubleshooting)
-16. [Creator](#creator)
+16. [Reference knowledge base](#reference-knowledge-base)
+17. [Creator](#creator)
 
 ---
 
@@ -362,7 +363,8 @@ tests/                   # 70 tests: parsers, masking, detection, ranking, watch
 docs/workflow.html       # printable one-case-eight-steps diagram
 docs/demo-ui.gif         # animated web-UI walkthrough (synthetic demo case)
 docs/demo-console.gif    # animated CLI session
-tools/                   # demo asset generators (seeder, GIF renderers)
+docs/reference/          # AI-assistant artifact catalogue (XLSX master + generated Markdown)
+tools/                   # demo asset generators, reference-doc builders, case scrubbers
 ```
 
 ---
@@ -404,6 +406,39 @@ shows provenance).
 **Coverage shows `unavailable` stores.**
 Some logs are locked, owned by another user, or unreadable. The coverage page is a deliberate
 honesty report — conclusions only hold for what was actually parsed.
+
+---
+
+## Reference knowledge base
+
+A companion reference for anyone planning an acquisition or extending coverage:
+**[AI-assistant query artifacts — reference knowledge base](docs/reference/ai-artifacts-knowledge-base.md)**
+(browsable on GitHub — the XLSX master does not render in the browser).
+
+It catalogues, per application, *where AI assistants store what they store*: 90+ on-disk
+artifacts across Claude Code / Claude Desktop, OpenAI Codex, ChatGPT Desktop & Atlas,
+ChatGPT Computer History, Cursor, Gemini CLI, Grok Build, Grok Bot, GitHub Copilot,
+Windsurf and Continue.
+
+| Sheet / section | What it answers |
+| --- | --- |
+| **Artifacts** | Component, default path, artifact type, evidence status, and forensic value — one row per artifact |
+| **Survives Deletion** | What outlives the primary transcript (backups, tombstones, summaries, caches) |
+| **Limitations** | What the catalogue cannot promise (version drift, encryption, cloud-only stores) |
+| **Import** | How each source maps to AI-Forensics — `collect → detect → analyze/rank → serve` |
+
+The **Import** sheet marks each application honestly: **Claude Code, OpenAI Codex, Cursor,
+Gemini CLI and GitHub Copilot** have parsers in this build; the remaining applications are
+documented reference material for future parsers, not hidden functionality. Credential
+stores are inventoried or excluded — never opened, copied, or hashed.
+
+- Markdown (generated, linkable): [`docs/reference/ai-artifacts-knowledge-base.md`](docs/reference/ai-artifacts-knowledge-base.md)
+- Editable master: [`docs/reference/AI_Query_Artifacts_Consolidated.xlsx`](docs/reference/AI_Query_Artifacts_Consolidated.xlsx)
+
+The workbook is the single source of truth — edit it, then regenerate the Markdown with
+`py -3.12 tools/build_reference_doc.py` (the Import sheet is refreshed by
+`tools/build_reference_sheets.py`). Compiled 2026-11-20 from public DFIR research;
+default paths vary by app version.
 
 ---
 
